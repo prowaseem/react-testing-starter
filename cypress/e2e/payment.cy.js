@@ -22,7 +22,8 @@ describe("payment", () => {
 
     // add amount and note and click pay
     const note = uuidv4();
-    cy.findByPlaceholderText(/amount/i).type("50");
+    const paymentAmount = "5.00";
+    cy.findByPlaceholderText(/amount/i).type(paymentAmount);
     cy.findByPlaceholderText(/add a note/i).type(note);
     cy.findByRole("button", { name: /pay/i }).click();
 
@@ -33,8 +34,17 @@ describe("payment", () => {
     cy.findByRole("tab", { name: /mine/i }).click();
 
     // click on payment
-    // cy.findByText(note).click();
+    cy.findByText(note).click({ force: true });
+
     // verify if payment was made
+    cy.findByText(`-$${paymentAmount}`).should("be.visible");
+    cy.findByText(`${note}`).should("be.visible");
+
     // verify if payment amount was deducted
+    cy.get('[data-test="sidenav-user-balance"]').then(($balance) => {
+      const convertedOldBalanace = parseFloat(oldBalance.replace(/\$|,/g, ""));
+      const convertedNewBalanace = parseFloat($balance.text().replace(/\$|,/g, ""));
+      expect(convertedOldBalanace - convertedNewBalanace).to.equal(parseFloat(paymentAmount));
+    });
   });
 });
